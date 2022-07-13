@@ -52,19 +52,14 @@ class World {
                 offset.y = (offset.x * Math.sin(Math.PI / 180 * this.rot.z)) + (offset.y * Math.cos(Math.PI / 180 * this.rot.z));
                 
                 if (offset.z <= 0) return;
-                
-                let adjust = {
-                    x: offset.x + (this.canvas.width  / 2),
-                    y: this.canvas.height - (offset.y + (this.canvas.height / 2)),
-                    z: offset.z / Math.min(this.canvas.width, this.canvas.height)
-                };
+                offset.z /= Math.min(this.canvas.width, this.canvas.height);
                 
                 let screen = {
-                    x: (adjust.x / adjust.z) + (this.canvas.width  - (this.canvas.width  / adjust.z)) / 2,
-                    y: (adjust.y / adjust.z) + (this.canvas.height - (this.canvas.height / adjust.z)) / 2
+                    x: (offset.x / offset.z) + (this.canvas.width  / 2),
+                    y: (offset.y / offset.z) + (this.canvas.height / 2),
                 };
                 
-                coords.push({ x: screen.x, y: screen.y });
+                coords.push({ x: screen.x, y: this.canvas.height - screen.y });
             });
             
             if (coords.length == 0) continue;
