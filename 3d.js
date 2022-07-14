@@ -1,6 +1,8 @@
 class World {
-    constructor(canvas, xPos = 0, yPos = 0, zPos = 0, xRot = 0, yRot = 0, zRot = 0) {
+    constructor(canvas, scale = 100, xPos = 0, yPos = 0, zPos = 0, xRot = 0, yRot = 0) {
         this.canvas = canvas;
+        this.scale  = scale;
+        
         this.pos = {
             x: xPos,
             y: yPos,
@@ -8,8 +10,7 @@ class World {
         };
         this.rot = {
             x: xRot,
-            y: yRot,
-            z: zRot
+            y: yRot
         };
         
         this.points = [];
@@ -28,6 +29,11 @@ class World {
     
     removePoly(index) { return this.polys.splice(index, 1) }
     
+    static rotatePoint = {
+        x(x, y, a) { return (x * Math.cos(Math.PI / 180 * a)) - (y * Math.sin(Math.PI / 180 * a)) },
+        y(x, y, a) { return (x * Math.sin(Math.PI / 180 * a)) + (y * Math.cos(Math.PI / 180 * a)) }
+    }
+    
     render() {
         let ctx = this.canvas.getContext('2d');
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -42,17 +48,20 @@ class World {
                     z: this.points[index].z - this.pos.z
                 };
                 
-                offset.x = (offset.x * Math.cos(Math.PI / 180 * this.rot.x)) - (offset.z * Math.sin(Math.PI / 180 * this.rot.x));
-                offset.z = (offset.x * Math.sin(Math.PI / 180 * this.rot.x)) + (offset.z * Math.cos(Math.PI / 180 * this.rot.x));
+                let temp = { x: 0, y: 0, z: 0 };
                 
-                offset.z = (offset.z * Math.cos(Math.PI / 180 * this.rot.y)) - (offset.y * Math.sin(Math.PI / 180 * this.rot.y));
-                offset.y = (offset.z * Math.sin(Math.PI / 180 * this.rot.y)) + (offset.y * Math.cos(Math.PI / 180 * this.rot.y));
+                temp.x = World.rotatePoint.x(offset.x, offset.z, this.rot.x);
+                temp.z = World.rotatePoint.y(offset.x, offset.z, this.rot.x);
+                offset.x = temp.x;
+                offset.z = temp.z;
+
+                temp.z = World.rotatePoint.x(offset.z, offset.y, this.rot.y);
+                temp.y = World.rotatePoint.y(offset.z, offset.y, this.rot.y);
+                offset.z = temp.z;
+                offset.y = temp.y;
                 
-                offset.x = (offset.x * Math.cos(Math.PI / 180 * this.rot.z)) - (offset.y * Math.sin(Math.PI / 180 * this.rot.z));
-                offset.y = (offset.x * Math.sin(Math.PI / 180 * this.rot.z)) + (offset.y * Math.cos(Math.PI / 180 * this.rot.z));
-                
-                if (offset.z <= 0) return;
-                offset.z /= Math.min(this.canvas.width, this.canvas.height);
+                if (offset.z < -this.scale) return;
+                offset.z  = (offset.z + this.scale) / Math.max(this.canvas.width, this.canvas.height);
                 
                 let screen = {
                     x: (offset.x / offset.z) + (this.canvas.width  / 2),
